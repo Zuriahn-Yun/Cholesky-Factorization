@@ -40,7 +40,6 @@ def cholesky(A):
         for i in range(A.shape[0]):
             for j in range(A.shape[1]):
                 summation = 0
-                print(A)
                 # Compute Diagonals
                 if i == j:
                     for k in range(j):
@@ -54,7 +53,6 @@ def cholesky(A):
                 # Otherwise the values are 0
                 else:
                     A[i,j] = 0
-        print("HERE")
         return A
     # Exception if matrix is not SPD
     except Exception as e:
@@ -69,8 +67,7 @@ def cholesky_det(A):
     return curr ** 2
 
 # Forward Substitution L * y = b
-def cholesky_forward_sub(A,b):
-    L = cholesky(A)
+def cholesky_forward_sub(L,b):
     # Ly = b
     y = np.array([])
     # Compute y 
@@ -87,42 +84,41 @@ def cholesky_forward_sub(A,b):
     return y.reshape(-1,1)
 
 # Backwards Substitution, L.T * x = y
-def cholesk_backward_sub(L,y):
-    x = np.array([])
+# y is a Column Vector 
+def cholesky_backward_sub(L,y):
+    x = np.zeros(len(y))
     # L.T * x = y
-    # Compute x, same logic as forward substitution
-    for i in range(len(y)):
-        if i == 0:
-            x = np.append(x,y[i] / L.T[i,i])
-        else:
-            computed = L.T[i,:i] @ x
-            x_i = (y[i] - computed) / L.T[i,i]
-            x = np.append(x,x_i)
+    # Compute x, same logic as forward substitution but backwards
+    for i in range(len(y) -1 , -1 ,-1):
+            computed = L.T[i,i+1:] @ x[i+1:]
+            x[i] = (y[i,0] - computed) / L.T[i,i]
     # Reshape x to column array
     return x.reshape(-1,1)
 
+def cholesky_inv(A):
+    L = cholesky(A)
+
+    # A^-1 = [a1, a2, a3, a4, a5]
+    inv_A = np.empty((len(A),0))
+    for i in range(len(A)):
+        e_i = np.zeros(len(A))
+        e_i[i] = 1
+        e_i = e_i.reshape(-1,1)
+        # L * y = e
+        y_i = cholesky_forward_sub(L,e_i)
+        # L.T * a = y
+        a_i = cholesky_backward_sub(L,y_i)
+        inv_A = np.concatenate((inv_A, a_i), axis=1)
+
+    return inv_A
+
 if __name__ == "__main__":
-    # print("START TEST")
-    # A = generate_random_spd(4)
-    # Original = A.copy()
-    #A = np.matrix([[2,1],[1,2]],dtype=np.float64)
-    #print(A)
-    # A = cholesky(A)
-    # decomp_check = np.matmul(A,A.T)
-    # print("L Decomp")
-    # print(A)
-    # print("CHOLESKY ")
-    # print(decomp_check)
-    # print("ORIGINAL")
-    # print(Original)
-    # print(np.allclose(decomp_check,Original))
-    # Testing Forward Test----------------------------
-    print("Testing Forward")
-    A = generate_random_spd(3)
-    Original_A = A.copy()
-    b = np.array([1,1,1])
-    b = b.reshape(-1,1)
-    y = cholesky_forward_sub(A,b)
-    x = cholesk_backward_sub(A,y)
-    print(x)
-    print(np.matmul(Original_A,x))
+    print("Test Functions -----------------------------------------------------------------------")
+    B = np.array([[16,4,8,4],
+                  [4,10,8,4],
+                  [8,8,12,10],
+                  [4,4,10,12]])
+    cho_inv_b = cholesky_inv(B.copy())
+    print(np.matmul(B,cho_inv_b))
+    
+    

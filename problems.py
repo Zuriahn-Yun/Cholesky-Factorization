@@ -1,7 +1,8 @@
 import cholesky
 import numpy as np
+import random
 
-# 1 --------------------------------------------
+# 1 ---------------------------------------------------------
 # Generate SPD Pascal Matrix
 def create_spd_pascal(p,n):
     A = np.zeros((n,n))
@@ -24,18 +25,14 @@ def determinant_spd_pascal(A):
         curr  = curr * L[i,i]
     return curr
 
-# 2 --------------------------------------------
-# the inverse of an SPD is also SPD, compute the iverses B of the Matrices in question 1 --------------- CHECK THIS Is it okay to use built in inverse function
+# 2 ---------------------------------------------------------
 def inverse_spd_pascal(A):
-    inv_A = np.linalg.inv(A)
+    B = 1/2 * (A + A.T)
+    inv_B = cholesky.cholesky_inv(B.copy())
     # Preseve Symmetry
-    B = 1/2 * (inv_A + inv_A.T)
-    return B
-
-# 3 --------------------------------------------
-# any solution x of the least squares problem
+    return inv_B
+# 3 ---------------------------------------------------------
 # B.T * B * x = B.T * b
-# When r is one million this always breaks??--------------------------
 def least_squares(r):
     B = np.array([[0,2,0],
                   [r,r,0],
@@ -51,7 +48,7 @@ def least_squares(r):
     # B.T * B* x = B.T * b -> LL.Tx = B.T * b
     # Therefore Ly = B.T * b using forward substitution
     y = cholesky.cholesky_forward_sub(BT_B,BT_b)
-    x = cholesky.cholesk_backward_sub(BT_B,y)
+    x = cholesky.cholesky_backward_sub(BT_B,y)
     return x
 
 # Numpy doesnt have an exact Solve with Least Squares Function
@@ -67,39 +64,41 @@ def QR_least_squares(r):
     p = Q.T @ b
     x = np.linalg.solve(R,p)
     return x
-# 4 -------------------------------------------- ask about the contents of the given matrix 
-def question_4(n):
+# 4 ---------------------------------------------------------
+# Generate Question 4 Matrix
+# corner_cofficient and all_ones_coefficient should be set to -1 or 1
+def question_4(n,corner_coefficient,all_ones_coefficient):
     A = np.zeros((n,n))
     for i in range(n-1):
         A[i,i] = 2
-        A[i,i + 1] = - 1
-        A[i+1,i] = -1
-    A[0, n - 1] = 1
-    A[n - 1,0] = 1
+        A[i,i + 1] = 1 * all_ones_coefficient
+        A[i+1,i] = 1 * all_ones_coefficient
+    A[0, n - 1] = 1 * corner_coefficient
+    A[n - 1,0] = 1 * corner_coefficient
     A[n - 1,n - 1] = 2
     return A
+
 if __name__ == "__main__":
-    # A = create_spd_pascal(15,3)
-    # Original_A = A.copy()
-    # det_A = determinant_spd_pascal(A)
-    # print(A)
-    # L = A
-    # print(L * L.T)
-    # print(det_A)
+    print("#1 ------------------------------------------------------------------------------------------------------------------")
+    for i in range(1):
+        p = random.randint(1,10)
+        n = random.randint(3,8)
+        B = create_spd_pascal(p,n)
+        print("N X N, SPD Pascal Matrix, p = ", p,", n =", n)
+        print(B)
+        det_B = determinant_spd_pascal(B)
+        print("Determinant of B = ", det_B)
+    print("#2 ------------------------------------------------------------------------------------------------------------------")
+    B = 1/2 * (B * B.T)
+    B_inv = np.linalg.inv(B)
+    B_SPD_bool = cholesky.check_spd(B_inv)
+    print("Is inv(B) SPD: ", B_SPD_bool)
+    print(B)
     
-    # B = inverse_spd_pascal(Original_A)
-    # print(B)
-    # B_cholesky = cholesky.cholesky(B)
-    # print(B_cholesky)
-    # print(B_cholesky * B_cholesky.T)
-    
-    # r = 100000
-    # x_qr = QR_least_squares(r)
-    # x_cholesky = least_squares(r)
-    
-    # print(x_cholesky)
-    # print(x_qr)
-    
-    A = question_4(5)
-    print(cholesky.check_symmetric(A))
-    print(cholesky.check_spd(A))
+    print("#3 ------------------------------------------------------------------------------------------------------------------")
+    for i in range(1):
+        exp = random.randint(9,20)
+        r = 10 ** exp
+        x = least_squares(r)
+        print(x)
+    print("#4 ------------------------------------------------------------------------------------------------------------------")
