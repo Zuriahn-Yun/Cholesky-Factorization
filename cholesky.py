@@ -23,15 +23,12 @@ def check_symmetric(A):
 # Check if a matrix is Symmetric and Positive Definite using Cholesky
 def check_spd(A):
     # If symmetric try Cholesky
-    if check_symmetric(A):
-        try:
-            cholesky(A)
-            return True
-        except:
-            # Return False if Cholesky returns an exception
-            return False
-    # Return False if matrix is not Symmetric
-    return False
+    if not check_symmetric(A):
+        return False
+    status = cholesky(A)
+    if status == "Matrix is not SPD":
+        return False
+    return True
 
 # Cholesky Decomposition
 def cholesky(A):
@@ -53,17 +50,18 @@ def cholesky(A):
                 # Otherwise the values are 0
                 else:
                     A[i,j] = 0
-        return A
+        return "Matrix is SPD"
     # Exception if matrix is not SPD
     except Exception as e:
-        return print("This is not an SPD Matrix")
+        return "Matrix is not SPD"
 
 # Calculate determinant of Cholesky Matrix CHECK THIS ---------------------------------------------------
 def cholesky_det(A):
     curr = 1
-    L = cholesky(A)
+    cholesky(A)
+    L = A
     for i in range(L.size[0]):
-        curr += curr * L[i,i]
+        curr *= L[i,i]
     return curr ** 2
 
 # Forward Substitution L * y = b
@@ -96,8 +94,8 @@ def cholesky_backward_sub(L,y):
     return x.reshape(-1,1)
 
 def cholesky_inv(A):
-    L = cholesky(A)
-
+    cholesky(A)
+    L = A
     # A^-1 = [a1, a2, a3, a4, a5]
     inv_A = np.empty((len(A),0))
     for i in range(len(A)):

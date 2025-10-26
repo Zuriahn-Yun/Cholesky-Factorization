@@ -19,7 +19,8 @@ def create_spd_pascal(p,n):
 # Generate Determinant of SPD Pascal
 def determinant_spd_pascal(A):
     curr = 1
-    L = cholesky.cholesky(A)
+    cholesky.cholesky(A)
+    L = A
     L = L * L.T
     for i in range(len(L)):
         curr  = curr * L[i,i]
@@ -101,4 +102,14 @@ if __name__ == "__main__":
         r = 10 ** exp
         x = least_squares(r)
         print(x)
+        qr_x = QR_least_squares(r)
+        print(qr_x)
     print("#4 ------------------------------------------------------------------------------------------------------------------")
+    print(cholesky.check_spd(question_4(100,1,1)))
+    print(cholesky.check_spd(question_4(100,-1,1)))
+    print(cholesky.check_spd(question_4(100,1,-1)))
+    print(cholesky.check_spd(question_4(100,-1,-1)))
+    print(cholesky.check_spd(question_4(99,1,1)))
+    print(cholesky.check_spd(question_4(99,-1,1)))
+    print(cholesky.check_spd(question_4(99,1,-1)))
+    print(cholesky.check_spd(question_4(99,-1,-1)))
