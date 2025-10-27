@@ -55,16 +55,15 @@ def cholesky(A):
     except Exception as e:
         return "Matrix is not SPD"
 
-# Calculate determinant of Cholesky Matrix CHECK THIS ---------------------------------------------------
+# Calculate determinant of Cholesky Matrix, Assumes A is already in Choleksy Decomposition
 def cholesky_det(A):
     curr = 1
-    cholesky(A)
-    L = A
-    for i in range(L.size[0]):
-        curr *= L[i,i]
+    for i in range(len(A)):
+        curr *= A[i,i]
     return curr ** 2
 
 # Forward Substitution L * y = b
+# Cannot Compute L.T
 def cholesky_forward_sub(L,b):
     # Ly = b
     y = np.array([])
@@ -88,14 +87,14 @@ def cholesky_backward_sub(L,y):
     # L.T * x = y
     # Compute x, same logic as forward substitution but backwards
     for i in range(len(y) -1 , -1 ,-1):
-            computed = L.T[i,i+1:] @ x[i+1:]
-            x[i] = (y[i,0] - computed) / L.T[i,i]
+            computed = np.dot(L[i+1:,i] , x[i+1:])
+            x[i] = (y[i,0] - computed) / L[i,i]
     # Reshape x to column array
     return x.reshape(-1,1)
 
+# Assumes A is not in cholesky Format
 def cholesky_inv(A):
     cholesky(A)
-    L = A
     # A^-1 = [a1, a2, a3, a4, a5]
     inv_A = np.empty((len(A),0))
     for i in range(len(A)):
@@ -103,20 +102,39 @@ def cholesky_inv(A):
         e_i[i] = 1
         e_i = e_i.reshape(-1,1)
         # L * y = e
-        y_i = cholesky_forward_sub(L,e_i)
+        y_i = cholesky_forward_sub(A,e_i)
         # L.T * a = y
-        a_i = cholesky_backward_sub(L,y_i)
+        a_i = cholesky_backward_sub(A,y_i)
         inv_A = np.concatenate((inv_A, a_i), axis=1)
-
     return inv_A
 
 if __name__ == "__main__":
     print("Test Functions -----------------------------------------------------------------------")
-    B = np.array([[16,4,8,4],
-                  [4,10,8,4],
-                  [8,8,12,10],
-                  [4,4,10,12]])
-    cho_inv_b = cholesky_inv(B.copy())
-    print(np.matmul(B,cho_inv_b))
-    
-    
+    print("Generate a random SPD Matrix")
+    A = generate_random_spd(5)
+    # Since A gets overwritten we need to save the original to check the inverse calculation
+    A_original = A.copy()
+    print(A)
+    print("Check if its SPD")
+    print("Matrix is SPD:" , check_spd(A))
+    print("Generate Cholesky")
+    cholesky(A)
+    print(A)
+    print("Calculate Determinant:", cholesky_det(A))
+    print("Test Forward and Backwards Sub")
+    x = np.ones(5)
+    x.reshape(-1,1)
+    print("x:", x)
+    y = cholesky_forward_sub(A,x)
+    print("y: ", y)
+    b = cholesky_backward_sub(A,y)
+    print("b: ", b)
+    print("Compute Inverse of A")
+    # This does not take extra space but it needs to be saved elsewhere for testing
+    print(A)
+    # Calculate the inverse of a copy of the original matrix
+    inv_A = cholesky_inv(A_original.copy())
+    print(inv_A)
+    # Check if computer properly 
+    print("A * A^-1")
+    print(np.round(A_original @ inv_A))
